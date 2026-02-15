@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحدي القدرات - الخطأ السياقي نموذج 2 (تمهيدي)</title>
+    <style>
+        :root { --primary: #1a252f; --secondary: #2980b9; --success: #27ae60; --danger: #c0392b; --gold: #f1c40f; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f3; margin: 0; padding: 20px; color: #2c3e50; }
+        .container { max-width: 850px; margin: auto; background: white; padding: 40px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); border-top: 10px solid var(--primary); }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #f1f1f1; padding-bottom: 20px; }
+        .school-info { font-size: 1.4em; color: var(--secondary); font-weight: bold; margin-top: 5px; }
+        .student-board { background: #f8f9fa; padding: 15px 25px; border-radius: 15px; margin-bottom: 25px; border-right: 8px solid var(--gold); display: flex; justify-content: space-between; align-items: center; }
+        .timer-display { font-weight: bold; font-size: 1.5em; color: var(--primary); background: white; padding: 8px 20px; border-radius: 12px; border: 2px solid var(--secondary); }
+        .timer-warning { color: var(--danger); border-color: var(--danger); animation: pulse 0.6s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .question-box h3 { background: #fdfdfd; padding: 25px; border-radius: 15px; border: 2px dashed #dcdde1; margin-top: 0; font-size: 1.3em; line-height: 1.5; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; list-style: none; padding: 0; }
+        .options-grid li { padding: 18px; border: 2px solid #edeff2; border-radius: 15px; cursor: pointer; text-align: center; transition: 0.3s; font-size: 1.1em; font-weight: 500; background: #fff; }
+        .options-grid li.correct-flash { background: #d4edda !important; border-color: #28a745 !important; color: #155724 !important; }
+        .options-grid li.selected { background: var(--secondary); color: white; border-color: var(--secondary); }
+        .feedback { margin-top: 25px; padding: 20px; border-radius: 15px; display: none; font-size: 1.05em; border-right: 10px solid; }
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 12px; cursor: pointer; font-size: 20px; font-weight: bold; margin-top: 25px; transition: 0.3s; }
+        .btn-start { background: var(--success); color: white; }
+        .btn-next { background: var(--primary); color: white; }
+        .footer-note { text-align: center; margin-top: 40px; padding-top: 25px; border-top: 2px solid #eee; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🚀 الخطأ السياقي - المستوى التمهيدي (نموذج 2)</h1>
+        <div class="school-info">ثانوية الأمير عبدالمجيد 🏫🎓</div>
+        <div style="margin-top: 10px; font-size: 1.2em; color: #34495e;">إعداد: أ / عبدالعزيز الفيفي 👨‍🏫</div>
+    </div>
+
+    <div id="start-screen">
+        <p style="text-align: center; font-size: 1.2em;">الزمن: 45 ثانية للسؤال. هذا النموذج صُمم ليكون سهلاً وواضحاً كبداية.</p>
+        <input type="text" id="name-input" placeholder="اكتب اسمك للمشاركة في التحدي..." style="width: 100%; padding: 18px; border-radius: 12px; border: 2px solid #ddd; margin-bottom: 20px; font-size: 16px; text-align: center;">
+        <button class="btn btn-start" onclick="initQuiz()">ابدأ التمهيد ⚡</button>
+    </div>
+
+    <div id="quiz-ui" style="display:none;">
+        <div class="student-board"><span id="student-tag"></span><div id="timer-text" class="timer-display">45 ث</div></div>
+        <div id="quiz-content"></div>
+        <button id="next-btn" class="btn btn-next" onclick="nextQuestion()" style="display:none;">السؤال التالي ⬅️</button>
+    </div>
+
+    <div id="results" style="display:none;">
+        <h2 style="text-align: center; color: var(--success);">اكتمل النموذج التمهيدي بنجاح! 🏆</h2>
+        <div id="score-box" style="text-align: center; font-size: 2.2em; margin: 20px 0; font-weight: bold;"></div>
+        <div id="summary-list"></div>
+        <div class="footer-note">أحسنت يا بطل، أنت الآن جاهز للمستويات المتقدمة 🌟<br><strong>أ / عبدالعزيز الفيفي</strong></div>
+    </div>
+</div>
+
+<script>
+const TIME_LIMIT = 45; 
+const quizData = [
+    { q: "المجتهد يرى النجاح قريباً، والكسول يرى النجاح مستحيلاً فيعمل على تحقيقه.", a: ["المجتهد", "قريباً", "الكسول", "تحقيقه"], c: 3, r: "الخطأ في كلمة (تحقيقه)، فمن يرى الشيء مستحيلاً لا يعمل على تحقيقه بل يتركه. ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "القراءة تفتح آفاق العقل، والجهل يغلق أبواب المعرفة.", a: ["تفتح", "العقل", "يغلق", "المعرفة"], c: 0, r: "الجملة صحيحة، ولكن في القدرات قد تأتي (تغلق) بدلاً من (تفتح) لتكون هي الخطأ السياقي. ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "من أراد أن يحبه الناس فليعاملهم بالقسوة، فمن قسا على الناس أحبوه.", a: ["يحبه", "بالقسوة", "قسا", "أحبوه"], c: 1, r: "الخطأ في (بالقسوة)، والصواب هو (باللين) أو (بالإحسان). ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "الأمانة صفة جميلة، والخيانة صفة رذيلة ترفع من شأن صاحبها.", a: ["جميلة", "الخيانة", "رذيلة", "ترفع"], c: 3, r: "الخطأ في (ترفع)، والصواب (تقلل) أو (تحط)؛ فالخيانة لا ترفع شأن أحد. ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "الشمس تشرق في الصباح لتنشر الظلام، وتغيب في المساء ليعم النور.", a: ["تشرق", "الظلام", "تغيب", "النور"], c: 1, r: "الخطأ في (الظلام)، والصواب (الضياء) أو (النور). ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "الصدق ينجي صاحبه، والكذب يهلك صاحبه، فاختر من القول أكذبه.", a: ["ينجي", "صاحبه", "يهلك", "أكذبه"], c: 3, r: "الخطأ في (أكذبه)، والصواب هو (أصدقه). ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "العمل الجاد يؤدي إلى الفشل، والكسل يؤدي إلى النجاح.", a: ["الجاد", "الفشل", "الكسل", "النجاح"], c: 1, r: "الخطأ في (الفشل)، والصواب هو (النجاح). ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "المعلم المخلص يبني عقول الطلاب، والمعلم المهمل يهدم مستواهم.", a: ["المخلص", "يبني", "المهمل", "يهدم"], c: 0, r: "في القدرات قد توضع كلمة (يهدم) بدلاً من (يبني) في الشطر الأول لتكون هي الخطأ. ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "من زاد علمه زاد حياؤه، ومن زاد جهله زاد غروره.", a: ["علمه", "حياؤه", "جهله", "غروره"], c: 0, r: "السياق سليم، ولكن قد يتم استبدال (علمه) بـ (ماله) ليكون هو الخطأ حسب الحكمة المشهورة. ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "الوالدان هما أغلى ما نملك، وعقوقهما طريق إلى الجنة.", a: ["أغلى", "نملك", "عقوقهما", "الجنة"], c: 3, r: "الخطأ في (الجنة)، والصواب هو (النار). ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "الصحة تاج على رؤوس الأصحاء، لا يراه إلا المرضى.", a: ["تاج", "رؤوس", "يراه", "المرضى"], c: 2, r: "السياق سليم تماماً، ولكن قد تأتي كلمة (الأصحاء) في آخر الجملة لتكون هي الخطأ. ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "من سار على الدرب وصل، ومن جلس في مكانه سبق الجميع.", a: ["سار", "وصل", "جلس", "سبق"], c: 3, r: "الخطأ في (سبق)، والصواب هو (تخلف) أو (تأخر). ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "الماء ضروري للحياة، وبدونه تموت الكائنات وتزدهر الأرض.", a: ["ضروري", "للحياة", "تموت", "تزدهر"], c: 3, r: "الخطأ في (تزدهر)، والصواب هو (تجف) أو (تموت). ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "الابتسامة بوجه أخيك صدقة، والعبوس في وجهه يقرب القلوب.", a: ["الابتسامة", "صدقة", "العبوس", "يقرب"], c: 3, r: "الخطأ في (يقرب)، والصواب هو (ينفر) أو (يبعد). ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "الرياضة تقوي الجسم، والكسل يضعف العضلات ويزيد من النشاط.", a: ["تقوي", "الكسل", "يضعف", "النشاط"], c: 3, r: "الخطأ في (النشاط)، والصواب هو (الخمول). ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "النوم المبكر مفيد للجسم، والسهر الطويل يقلل من التعب.", a: ["المبكر", "مفيد", "السهر", "يقلل"], c: 3, r: "الخطأ في (يقلل)، والصواب هو (يزيد). ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "الصدقة تبارك في المال، والبخل يزيد من البركة.", a: ["الصدقة", "تبارك", "البخل", "يزيد"], c: 3, r: "الخطأ في (يزيد)، والصواب هو (يقلل) أو (يمحق). ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "العلم يرفع بيوتاً لا عماد لها، والجهل يهدم بيوت العز والكرم.", a: ["يرفع", "عماد", "الجهل", "يهدم"], c: 0, r: "في القدرات قد تُستبدل (يرفع) بـ (يهدم) لتكون هي الخطأ. ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "من يطلب العلا يسهر الليالي، ومن يطلب الراحة ينام النهار.", a: ["العلا", "يسهر", "الراحة", "ينام"], c: 3, r: "السياق سليم، ولكن قد توضع (يسهر) بدلاً من (ينام) في الشطر الثاني لتكون خطأ. ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "الحر يفي بوعوده، والجبان يهرب من مسؤولياته.", a: ["الحر", "يفي", "الجبان", "يهرب"], c: 0, r: "السياق سليم، ولكن قد تُستبدل (الحر) بـ (العبد) لتكون هي الخطأ. ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "النظافة من الإيمان، والقذارة من صفات المؤمن الصالح.", a: ["النظافة", "الإيمان", "القذارة", "الصالح"], c: 2, r: "الخطأ في (القذارة)، والصواب هو (الطهارة) إذا أردنا صفة المؤمن. ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "الوقت كالسيف إن لم تقطعه قطعك، فاحرص على إضاعة وقتك.", a: ["كالسيف", "تقطعه", "احرص", "إضاعة"], c: 3, r: "الخطأ في (إضاعة)، والصواب هو (استغلال) أو (حفظ). ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "السفر يزيد من الخبرة، والبقاء في المنزل يوسع مدارك الإنسان.", a: ["السفر", "يزيد", "المنزل", "يوسع"], c: 3, r: "الخطأ في (يوسع)، والصواب هو (يضيق) مقارنة بالسفر. ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "الصديق وقت الضيق، والعدو وقت الرخاء.", a: ["الصديق", "الضيق", "العدو", "الرخاء"], c: 2, r: "السياق سليم، ولكن قد توضع (العدو) بدلاً من (الصديق) في بداية الجملة لتكون خطأ. ✨ أ / عبد العزيز الفيفي 🎓" },
+    { q: "من غشنا فليس منا، ومن صدقنا فهو أغلى أحبابنا.", a: ["غشنا", "فليس", "صدقنا", "أغلى"], c: 2, r: "الجملة سليمة، ولكن قد يتم استبدال (صدقنا) بـ (كذبنا) لتكون هي الخطأ السياقي. ✨ أ / عبد العزيز الفيفي 🎓" }
+];
+
+let currentPos = 0, score = 0, stdName = "", records = [], timerId = null, timeLeft = TIME_LIMIT;
+
+function initQuiz() {
+    stdName = document.getElementById('name-input').value.trim();
+    if(!stdName) return alert("الاسم مطلوب!");
+    document.getElementById('start-screen').style.display = "none";
+    document.getElementById('quiz-ui').style.display = "block";
+    document.getElementById('student-tag').innerHTML = `👤 المتحدي: <strong>${stdName}</strong>`;
+    renderQuestion();
+}
+
+function runTimer() {
+    timeLeft = TIME_LIMIT;
+    const timerBox = document.getElementById('timer-text');
+    timerBox.innerText = `${timeLeft} ث`;
+    timerBox.classList.remove('timer-warning');
+    clearInterval(timerId);
+    timerId = setInterval(() => {
+        timeLeft--;
+        timerBox.innerText = `${timeLeft} ث`;
+        if(timeLeft <= 7) timerBox.classList.add('timer-warning');
+        if(timeLeft <= 0) {
+            clearInterval(timerId);
+            handleTimeUp();
+        }
+    }, 1000);
+}
+
+function renderQuestion() {
+    const data = quizData[currentPos];
+    document.getElementById('quiz-content').innerHTML = `
+        <div style="color:#7f8c8d; font-weight:bold; margin-bottom:15px;">السؤال ${currentPos + 1} من ${quizData.length}</div>
+        <div class="question-box"><h3>${data.q}</h3></div>
+        <ul class="options-grid" id="opts">
+            ${data.a.map((opt, i) => `<li id="opt-${i}" onclick="onSelect(this, ${i})">${opt}</li>`).join('')}
+        </ul>
+        <div id="fb" class="feedback"></div>
+    `;
+    document.getElementById('next-btn').style.display = "none";
+    runTimer();
+}
+
+function onSelect(el, idx) {
+    if(document.getElementById('next-btn').style.display === "block") return;
+    clearInterval(timerId);
+    const data = quizData[currentPos];
+    const isCorrect = (idx === data.c);
+    if(isCorrect) score++;
+    records.push({q: data.q, user: data.a[idx], correct: data.a[data.c], isCorrect, r: data.r});
+    showFeedback(isCorrect, data.r);
+}
+
+function handleTimeUp() {
+    if(document.getElementById('next-btn').style.display === "block") return;
+    const data = quizData[currentPos];
+    const correctOption = document.getElementById(`opt-${data.c}`);
+    correctOption.classList.add('correct-flash');
+    records.push({q: data.q, user: "انتهى الوقت", correct: data.a[data.c], isCorrect: false, r: data.r});
+    showFeedback(false, "انتهى الوقت! لاحظ الإجابة الصحيحة.<br>" + data.r);
+}
+
+function showFeedback(isCorrect, reason) {
+    const fb = document.getElementById('fb');
+    fb.style.display = "block";
+    fb.style.borderColor = isCorrect ? "var(--success)" : "var(--danger)";
+    fb.style.background = isCorrect ? "#eafaf1" : "#fdedec";
+    fb.innerHTML = `<strong>${isCorrect ? 'أحسنت! ✅' : 'انتبه.. ❌'}</strong><br>${reason}`;
+    document.getElementById('next-btn').style.display = "block";
+}
+
+function nextQuestion() {
+    currentPos++;
+    if(currentPos < quizData.length) renderQuestion();
+    else finalize();
+}
+
+function finalize() {
+    document.getElementById('quiz-ui').style.display = "none";
+    document.getElementById('results').style.display = "block";
+    document.getElementById('score-box').innerText = `النتيجة: ${score} من ${quizData.length}`;
+    let html = "<h4>تقرير تحليل الأداء - المستوى التمهيدي:</h4>";
+    records.forEach((rec, i) => {
+        html += `<div style="padding:15px; border-bottom:1px solid #eee; margin-bottom:12px; border-radius:12px; background:#fdfdfd; border-right: 5px solid ${rec.isCorrect?'var(--success)':'var(--danger)'}">
+            <strong>س${i+1}. ${rec.q}</strong><br>
+            اختيارك: <span style="color:${rec.isCorrect?'var(--success)':'var(--danger)'}">${rec.user}</span> | الصواب: <span style="color:var(--success)">${rec.correct}</span><br>
+            <small>💡 الشرح: ${rec.r}</small>
+        </div>`;
+    });
+    document.getElementById('summary-list').innerHTML = html;
+}
+</script>
+</body>
+</html>
